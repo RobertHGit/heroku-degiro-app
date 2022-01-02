@@ -1,3 +1,6 @@
+requirements:
+	pip freeze > requirements.txt
+
 commit:
 	git add .
 	git commit -am "$m"
@@ -5,6 +8,3 @@ commit:
 
 log:
 	heroku logs -a heroku-degiro-scraper --tail
-
-pip:
-	pip freeze > requirements.txt
