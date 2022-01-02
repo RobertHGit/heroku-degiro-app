@@ -1,1 +1,1 @@
-worker: python src/degiro-app/run_app.py
+worker: python src/degiro_app/run_app.py
