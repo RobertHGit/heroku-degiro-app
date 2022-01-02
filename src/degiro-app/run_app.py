@@ -1,6 +1,7 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
+from pytz import timezone
 
-scheduler = BlockingScheduler()
+scheduler = BlockingScheduler(timezone=timezone(zone="Europe/Amsterdam"))
 
 
 @scheduler.scheduled_job("interval", seconds=3)
