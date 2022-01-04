@@ -1,5 +1,6 @@
 requirements:
 	pip freeze > requirements.txt
+	echo "-e src/" >> requirements.txt
 
 commit:
 	git add .
