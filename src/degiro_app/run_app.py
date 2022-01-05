@@ -5,6 +5,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from degiro_app.lib_degiro_scraping.utils.chrome_utils import get_headless_chrome_options
 from degiro_app.lib_degiro_scraping.utils.db_utils import get_db_engine
 from degiro_app.lib_degiro_scraping.utils.dummy_pom import GoToDummyPage
+from pytz import timezone
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from sqlalchemy.types import Integer, VARCHAR
@@ -12,7 +13,7 @@ from sqlalchemy.types import Integer, VARCHAR
 scheduler = BlockingScheduler(timezone=timezone(zone="Europe/Amsterdam"))
 
 
-@schedule.scheduled_job("cron", day_of_week="mon-fri", hour=19)
+@scheduler.scheduled_job("cron", day_of_week="mon-fri", hour=19)
 def run_scrape():
     """Daily job to scrape data and store."""
 
