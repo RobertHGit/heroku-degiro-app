@@ -1,5 +1,5 @@
 requirements:
-	pip freeze > requirements.txt
+	pip freeze | sed '/degiro/d' > requirements.txt
 	echo "-e src/" >> requirements.txt
 
 commit:
