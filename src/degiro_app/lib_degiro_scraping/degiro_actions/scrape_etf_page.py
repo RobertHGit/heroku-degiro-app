@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Tuple
 
 import attr
 from degiro_app.lib_degiro_scraping.degiro_actions.login_to_degiro import LoginToDeGiro
@@ -11,11 +11,12 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 class ScrapeEtfPage:
     driver: WebDriver = attr.ib()
 
-    def run(self) -> Tuple[WebDriver, List[DataFrame]]:
+    def run(self) -> Tuple[WebDriver, DataFrame]:
         login_to_degiro = LoginToDeGiro(driver=self.driver)
         driver = login_to_degiro.run()
 
         etf_page = EtfPage(driver=driver)
         etf_page.get_page()
         etf_page.scrape_tables()
-        return etf_page.driver, etf_page.tables
+        etf_page.transform_scraped_tables()
+        return etf_page.driver, etf_page.etf_data
