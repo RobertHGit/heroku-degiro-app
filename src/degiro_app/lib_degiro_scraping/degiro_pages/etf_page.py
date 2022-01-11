@@ -10,6 +10,57 @@ from selenium.webdriver.common.by import By
 
 
 @attr.s
+class DfTransforms:
+    @staticmethod
+    def symbool_col(series):
+        transformed_col = series.symbool_isin
+        transformed_col = transformed_col.replace("\xa0", "")
+        if "|" in transformed_col:
+            symbool_col, _ = transformed_col.split("| ", 2)
+        else:
+            symbool_col = None
+        return symbool_col
+
+    @staticmethod
+    def isin_col(series):
+        transformed_col = series.symbool_isin
+        transformed_col = transformed_col.replace("\xa0", "")
+        if "|" in transformed_col:
+            _, isin_col = transformed_col.split("| ", 2)
+        else:
+            isin_col = transformed_col
+        return isin_col
+
+    @staticmethod
+    def laatst_sign_col(series):
+        return series.laatst[0]
+
+    @staticmethod
+    def laatst_col(series):
+        transformed_col = series.laatst
+        transformed_col = transformed_col.replace("\xa0", "")
+        transformed_col = transformed_col[1:]
+        transformed_col = transformed_col.replace(",", ".")
+        try:
+            transformed_col = float(transformed_col)
+        except ValueError:
+            transformed_col = 0
+        return transformed_col
+
+    @staticmethod
+    def perc_change_col(series):
+        transformed_col = series.perc_change
+        transformed_col = transformed_col[1:-1]
+        transformed_col = transformed_col.replace(",", ".")
+        transformed_col = float(transformed_col)
+        if series.perc_change[0] == "+":
+            transformed_col = transformed_col / 100
+        elif series.perc_change[0] == "-":
+            transformed_col = -1 * transformed_col / 100
+        return transformed_col
+
+
+@attr.s
 class EtfPage:
     driver: WebDriver = attr.ib()
     tables: List[pd.DataFrame] = attr.ib(default=[])
@@ -28,7 +79,9 @@ class EtfPage:
     def next_page_etf_table(self) -> bool:
         time.sleep(2)
         try:
-            self.driver.find_element(by=By.XPATH, value=EtfPageLocators.NEXT_PAGE_BUTTON_XPATH.value).click()
+            self.driver.find_element(
+                by=By.XPATH, value=EtfPageLocators.NEXT_PAGE_BUTTON_XPATH.value
+            ).click()
             return True
         except ElementClickInterceptedException:
             return False
@@ -41,30 +94,47 @@ class EtfPage:
 
     def transform_scraped_tables(self) -> None:
         df = pd.concat(self.tables)
-        df.drop(df.columns[-1], inplace=True, axis=1)
-        df.replace(u"\xa0", u"", regex=True, inplace=True)
-        df = df.rename(
-            columns={
-                "Product": "product",
-                "Symbool | ISIN": "symbool_isin",
-                "Beurs": "beurs",
-                "Laatst": "laatst",
-                "+/-": "abs_change",
-                "+/- %": "perc_change",
-                "Volume": "volume",
-                "Slot": "slot",
-                "Laatste": "laatste",
-                "LKF": "lkf",
-                "Gebied": "gebied",
-            }
-        )
-        for col_name in ["laatst", "perc_change"]:
-            df[f'{col_name}_sign'] = df[col_name].astype(str).str[0]
-            df[col_name] = df[col_name].str[1:]
-            df[col_name] = df[col_name].str.replace(",", ".")
-        df["perc_change"] = df["perc_change"].str[:-1]
-        df["laatst"] = df["laatst"].astype(float)
-        df["perc_change"] = df["perc_change"].astype(float)
 
-        # df[["Symbool", "ISIN"]] = df.symbool_isin.str.split("| ", expand=True)
+        df.drop(df.columns[-1], inplace=True, axis=1)
+        column_mapping = {
+            "Product": "product",
+            "Symbool | ISIN": "symbool_isin",
+            "Beurs": "beurs",
+            "Laatst": "laatst",
+            "+/-": "abs_change",
+            "+/- %": "perc_change",
+            "Volume": "volume",
+            "Slot": "slot",
+            "Laatste": "laatste",
+            "LKF": "lkf",
+            "Gebied": "gebied",
+        }
+        df = df.rename(columns=column_mapping)
+
+        df_transforms = DfTransforms()
+        prefix = "transformed"
+        df[
+            [
+                f"{prefix}_{col_name}"
+                for col_name in ["product", "beurs", "lkf", "gebied"]
+            ]
+        ] = df[["product", "beurs", "lkf", "gebied"]]
+        df[f"{prefix}_symbool"] = df.apply(
+            lambda row: df_transforms.symbool_col(row), axis=1
+        )
+        df[f"{prefix}_isin"] = df.apply(lambda row: df_transforms.isin_col(row), axis=1)
+        df[f"{prefix}_laatst_sign"] = df.apply(
+            lambda row: df_transforms.laatst_sign_col(row), axis=1
+        )
+        df[f"{prefix}_laatst"] = df.apply(
+            lambda row: df_transforms.laatst_col(row), axis=1
+        )
+        df[f"{prefix}_perc_change"] = df.apply(
+            lambda row: df_transforms.perc_change_col(row), axis=1
+        )
+
+        df = df[[col for col in df.columns.to_list() if prefix in col]]
+        df = df.rename(
+            columns={col: col.replace(f"{prefix}_", "") for col in df.columns.to_list()}
+        )
         self.etf_data = df
