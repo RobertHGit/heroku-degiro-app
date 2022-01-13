@@ -67,13 +67,15 @@ class EtfPage:
     etf_data: pd.DataFrame = attr.ib(default=None)
 
     def get_page(self) -> None:
-        time.sleep(2)
+        time.sleep(3)
         full_url = EtfPageLocators.PAGE_URL.value + EtfPageLocators.SEARCH_URL.value
         self.driver.get(url=full_url)
 
     def scrape_table(self) -> None:
-        time.sleep(2)
-        dfs = pd.read_html(self.driver.page_source)
+        time.sleep(3)
+        dfs = pd.read_html(
+            self.driver.page_source, parse_dates=True, thousands=".", decimal=","
+        )
         self.tables.append(dfs[0])
 
     def next_page_etf_table(self) -> bool:
@@ -113,12 +115,8 @@ class EtfPage:
 
         df_transforms = DfTransforms()
         prefix = "transformed"
-        df[
-            [
-                f"{prefix}_{col_name}"
-                for col_name in ["product", "beurs", "lkf", "gebied"]
-            ]
-        ] = df[["product", "beurs", "lkf", "gebied"]]
+        copy_columns = ["product", "beurs", "gebied", "abs_change"]
+        df[[f"{prefix}_{col_name}" for col_name in copy_columns]] = df[copy_columns]
         df[f"{prefix}_symbool"] = df.apply(
             lambda row: df_transforms.symbool_col(row), axis=1
         )
@@ -133,8 +131,8 @@ class EtfPage:
             lambda row: df_transforms.perc_change_col(row), axis=1
         )
 
-        df = df[[col for col in df.columns.to_list() if prefix in col]]
-        df = df.rename(
-            columns={col: col.replace(f"{prefix}_", "") for col in df.columns.to_list()}
-        )
+        # df = df[[col for col in df.columns.to_list() if prefix in col]]
+        # df = df.rename(
+        #     columns={col: col.replace(f"{prefix}_", "") for col in df.columns.to_list()}
+        # )
         self.etf_data = df
