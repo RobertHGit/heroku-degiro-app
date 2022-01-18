@@ -1,14 +1,23 @@
 import os
 
+import logging
 import pandas as pd
 from apscheduler.schedulers.blocking import BlockingScheduler
-from degiro_app.lib_degiro_scraping.utils.chrome_utils import get_headless_chrome_options
+from degiro_app.lib_degiro_scraping.utils.chrome_utils import (
+    get_headless_chrome_options,
+)
 from degiro_app.lib_degiro_scraping.utils.db_utils import get_db_engine
 from degiro_app.lib_degiro_scraping.utils.dummy_pom import GoToDummyPage
 from pytz import timezone
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from sqlalchemy.types import Integer, VARCHAR
+
+logging.basicConfig(
+    filename="newfile.log", format="%(asctime)s %(message)s", filemode="w"
+)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 scheduler = BlockingScheduler(timezone=timezone(zone="Europe/Amsterdam"))
 
@@ -17,7 +26,7 @@ scheduler = BlockingScheduler(timezone=timezone(zone="Europe/Amsterdam"))
 def run_scrape():
     """Daily job to scrape data and store."""
 
-    print("*** running daily task ***")
+    logger.info("*** running daily task ***")
 
     # scrape a website
     service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
