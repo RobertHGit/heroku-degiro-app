@@ -10,12 +10,15 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 @attr.s
 class ScrapeEtfPage:
     driver: WebDriver = attr.ib()
+    etf_asset_allocation = attr.ib(default=None)
 
     def run(self) -> Tuple[WebDriver, DataFrame]:
         login_to_degiro = LoginToDeGiro(driver=self.driver)
         driver = login_to_degiro.run()
 
-        etf_page = EtfPage(driver=driver)
+        etf_page = EtfPage(
+            driver=driver, etf_asset_allocation=self.etf_asset_allocation
+        )
         etf_page.get_page()
         etf_page.scrape_tables()
         etf_page.transform_scraped_tables()

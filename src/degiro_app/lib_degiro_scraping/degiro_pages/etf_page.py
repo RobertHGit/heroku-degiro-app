@@ -3,7 +3,10 @@ from typing import List
 
 import attr
 import pandas as pd
-from degiro_app.lib_degiro_scraping.degiro_pages.page_locators import EtfPageLocators
+from degiro_app.lib_degiro_scraping.degiro_pages.page_locators import (
+    EtfPageLocators,
+    etf_asset_allocation_search_urls,
+)
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
@@ -11,6 +14,10 @@ from selenium.webdriver.common.by import By
 
 @attr.s
 class DfTransforms:
+    @staticmethod
+    def product_col(series):
+        return series.transformed_product[2:-1]
+
     @staticmethod
     def symbool_col(series):
         transformed_col = series.symbool_isin
@@ -64,11 +71,12 @@ class DfTransforms:
 class EtfPage:
     driver: WebDriver = attr.ib()
     tables: List[pd.DataFrame] = attr.ib(default=[])
+    etf_asset_allocation = attr.ib(default=None)
     etf_data: pd.DataFrame = attr.ib(default=None)
 
     def get_page(self) -> None:
         time.sleep(3)
-        full_url = EtfPageLocators.PAGE_URL.value + EtfPageLocators.SEARCH_URL.value
+        full_url = f"{EtfPageLocators.PAGE_URL.value}{etf_asset_allocation_search_urls[self.etf_asset_allocation]}"
         self.driver.get(url=full_url)
 
     def scrape_table(self) -> None:
@@ -91,10 +99,12 @@ class EtfPage:
     def scrape_tables(self) -> None:
         scrape_switch = True
         while scrape_switch:
+            time.sleep(2)
             self.scrape_table()
             scrape_switch = self.next_page_etf_table()
 
     def transform_scraped_tables(self) -> None:
+        time.sleep(2)
         df = pd.concat(self.tables)
 
         df.drop(df.columns[-1], inplace=True, axis=1)
@@ -107,16 +117,17 @@ class EtfPage:
             "+/- %": "perc_change",
             "Volume": "volume",
             "Slot": "slot",
-            "Laatste": "laatste",
+            "laatste": "laatste",
             "LKF": "lkf",
             "Gebied": "gebied",
         }
         df = df.rename(columns=column_mapping)
 
-        df_transforms = DfTransforms()
         prefix = "transformed"
-        copy_columns = ["product", "beurs", "gebied", "abs_change"]
+        copy_columns = ["product", "beurs", "gebied", "abs_change", "volume", "slot"]
         df[[f"{prefix}_{col_name}" for col_name in copy_columns]] = df[copy_columns]
+
+        df_transforms = DfTransforms()
         df[f"{prefix}_symbool"] = df.apply(
             lambda row: df_transforms.symbool_col(row), axis=1
         )
@@ -130,9 +141,14 @@ class EtfPage:
         df[f"{prefix}_perc_change"] = df.apply(
             lambda row: df_transforms.perc_change_col(row), axis=1
         )
+        df[f"{prefix}_product"] = df.apply(
+            lambda row: df_transforms.product_col(row), axis=1
+        )
 
-        # df = df[[col for col in df.columns.to_list() if prefix in col]]
-        # df = df.rename(
-        #     columns={col: col.replace(f"{prefix}_", "") for col in df.columns.to_list()}
-        # )
+        df = df[[col for col in df.columns.to_list() if prefix in col]]
+        df = df.rename(
+            columns={col: col.replace(f"{prefix}_", "") for col in df.columns.to_list()}
+        )
+        df["asset_class"] = self.etf_asset_allocation
+
         self.etf_data = df

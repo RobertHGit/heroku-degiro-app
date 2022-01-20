@@ -1,5 +1,12 @@
 from enum import Enum
 
+etf_asset_allocation_search_urls = {
+    "bonds": "products?productType=131&feeType=2&popularOnly=false&exchange=-1&issuer=-1&region=-1&benchmark=-1&assetAllocation=Bonds&totalExpenseRatioInterval=-%2F-",
+    "shares": "products?productType=131&feeType=2&popularOnly=false&exchange=-1&issuer=-1&region=-1&benchmark=-1&assetAllocation=Shares&totalExpenseRatioInterval=-%2F-",
+    "real_estate": "https://trader.degiro.nl/trader/#/products?productType=131&feeType=2&popularOnly=false&exchange=-1&issuer=-1&region=-1&benchmark=-1&assetAllocation=Real%20Estate&totalExpenseRatioInterval=-%2F-",
+    "commodities": "products?productType=131&feeType=2&popularOnly=false&exchange=-1&issuer=-1&region=-1&benchmark=-1&assetAllocation=Commodities&totalExpenseRatioInterval=-%2F-",
+}
+
 
 class LoginPageLocators(Enum):
     PAGE_URL = "https://trader.degiro.nl/login/nl#/login"
@@ -10,7 +17,5 @@ class LoginPageLocators(Enum):
 
 class EtfPageLocators(Enum):
     PAGE_URL = "https://trader.degiro.nl/trader/#/"
-    SEARCH_URL = "products?productType=131&feeType=2&popularOnly=false&exchange=-1&issuer=-1&region=-1&benchmark=-1&assetAllocation=-1&totalExpenseRatioInterval=-%2F-"
     NEXT_PAGE_BUTTON_NAME = "nextPageButton"
     NEXT_PAGE_BUTTON_XPATH = '//*[@id="mainContent"]/div[1]/section/div/section/div[2]/div/section/div[2]/div/div[1]/button[3]/i'
-
