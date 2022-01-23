@@ -7,7 +7,10 @@ from degiro_app.lib_degiro_scraping.degiro_pages.page_locators import (
     EtfPageLocators,
     etf_asset_allocation_search_urls,
 )
-from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    NoSuchElementException,
+)
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 
@@ -70,7 +73,7 @@ class DfTransforms:
 @attr.s
 class EtfPage:
     driver: WebDriver = attr.ib()
-    tables: List[pd.DataFrame] = attr.ib(default=[])
+    tables: List[pd.DataFrame] = attr.ib(default=None)
     etf_asset_allocation = attr.ib(default=None)
     etf_data: pd.DataFrame = attr.ib(default=None)
 
@@ -84,7 +87,10 @@ class EtfPage:
         dfs = pd.read_html(
             self.driver.page_source, parse_dates=True, thousands=".", decimal=","
         )
+        if self.tables is None:
+            self.tables = []
         self.tables.append(dfs[0])
+
 
     def next_page_etf_table(self) -> bool:
         time.sleep(2)
@@ -93,15 +99,14 @@ class EtfPage:
                 by=By.XPATH, value=EtfPageLocators.NEXT_PAGE_BUTTON_XPATH.value
             ).click()
             return True
-        except ElementClickInterceptedException:
+        except (NoSuchElementException, ElementClickInterceptedException):
             return False
 
     def scrape_tables(self) -> None:
-        scrape_switch = True
-        while scrape_switch:
-            time.sleep(2)
+        next_page_button_flag = True
+        while next_page_button_flag:
             self.scrape_table()
-            scrape_switch = self.next_page_etf_table()
+            next_page_button_flag = self.next_page_etf_table()
 
     def transform_scraped_tables(self) -> None:
         time.sleep(2)

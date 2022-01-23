@@ -1,7 +1,6 @@
 from typing import Tuple
 
 import attr
-from degiro_app.lib_degiro_scraping.degiro_actions.login_to_degiro import LoginToDeGiro
 from degiro_app.lib_degiro_scraping.degiro_pages.etf_page import EtfPage
 from pandas import DataFrame
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -13,11 +12,8 @@ class ScrapeEtfPage:
     etf_asset_allocation = attr.ib(default=None)
 
     def run(self) -> Tuple[WebDriver, DataFrame]:
-        login_to_degiro = LoginToDeGiro(driver=self.driver)
-        driver = login_to_degiro.run()
-
         etf_page = EtfPage(
-            driver=driver, etf_asset_allocation=self.etf_asset_allocation
+            driver=self.driver, etf_asset_allocation=self.etf_asset_allocation
         )
         etf_page.get_page()
         etf_page.scrape_tables()
