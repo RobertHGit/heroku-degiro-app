@@ -31,6 +31,7 @@ def run_scrape():
     service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
     driver = webdriver.Chrome(service=service, options=get_headless_chrome_options())
 
+    print("*** login to DeGiro ***")
     login_to_degiro = LoginToDeGiro(driver=driver)
     driver = login_to_degiro.run()
 
