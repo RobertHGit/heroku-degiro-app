@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from typing import List
 
 import attr
@@ -91,7 +92,6 @@ class EtfPage:
             self.tables = []
         self.tables.append(dfs[0])
 
-
     def next_page_etf_table(self) -> bool:
         time.sleep(2)
         try:
@@ -132,6 +132,7 @@ class EtfPage:
         copy_columns = ["product", "beurs", "gebied", "abs_change", "volume", "slot"]
         df[[f"{prefix}_{col_name}" for col_name in copy_columns]] = df[copy_columns]
 
+        # transform columns
         df_transforms = DfTransforms()
         df[f"{prefix}_symbool"] = df.apply(
             lambda row: df_transforms.symbool_col(row), axis=1
@@ -154,6 +155,9 @@ class EtfPage:
         df = df.rename(
             columns={col: col.replace(f"{prefix}_", "") for col in df.columns.to_list()}
         )
+
+        # add columns
         df["asset_class"] = self.etf_asset_allocation
+        df["creation_day"] = datetime.today().strftime("%Y-%m-%d")
 
         self.etf_data = df

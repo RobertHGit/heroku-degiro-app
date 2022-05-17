@@ -65,6 +65,7 @@ def run_scrape():
                 "laatst": FLOAT(),
                 "perc_change": FLOAT(),
                 "asset_class": VARCHAR(),
+                "creation_day": VARCHAR(),
             },
         )
 

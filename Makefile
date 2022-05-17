@@ -15,3 +15,9 @@ running:
 
 stop:
 	heroku ps:scale worker=0 --app heroku-degiro-scraper
+
+db_info:
+	heroku pg:info --app heroku-degiro-scraper
+
+sql:
+	heroku pg:psql --app heroku-degiro-scraper

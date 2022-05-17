@@ -133,3 +133,5 @@ dmypy.json
 
 # local stuff
 /dev_local/*
+
+.DS_Store
